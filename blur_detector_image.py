@@ -1,22 +1,11 @@
 from blurdetection.blur_detector import detect_blur_fft
-from blurdetection.processing import load_scan, plot
+from blurdetection.processing import load_scan, plot, reporting
 import argparse
 from glob import glob
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from pathlib import Path
-import numpy as np
-import xlsxwriter
+import os
 
 AUSWERTUNG = "auswertung.xlsx"
-workbook = xlsxwriter.Workbook(AUSWERTUNG)
-worksheet = workbook.add_worksheet()
-worksheet.write(0, 0, "MRT-Bild")
-worksheet.write(0, 1, "Motion")
-worksheet.write(0, 2, 'Ghosting')
-worksheet.write(0, 3, "Blurring")
-worksheet.write(0, 4, "Noise")
-worksheet.write(0, 5, "Kein Artefakt")
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -28,19 +17,33 @@ ap.add_argument("-t", "--thresh", type=int, default=20,
 	help="threshold for our blur detector to fire")
 args = vars(ap.parse_args())
 
+if not os.path.exists('my_folder'):
+	os.makedirs('my_folder')
 
-for file_name in glob("{}*.nii".format(args["folder"])):
-	nr = Path(file_name).stem
+# single image blurryness detection
+if args["image"]:
+	file_name = args["image"]
+
+	file_id = Path(file_name).stem
 	arr = load_scan(file_name)
 	(mean, blurry) = detect_blur_fft(arr, size=30,
 									 thresh=args["thresh"])
 
-	#plot(arr, mean, blurry, nr, "plots")
 
-	worksheet.write(int(nr), 0, int(nr))
-	if blurry:
-		worksheet.write(int(nr), 3, 1)
-	else:
-		worksheet.write(int(nr), 5, 1)
+	plot(arr, mean, blurry, file_id, "plots")
 
-workbook.close()
+
+if args["folder"]:
+	report = reporting(AUSWERTUNG)
+
+	for file_name in glob("{}*.nii".format(args["folder"])):
+		file_id = Path(file_name).stem
+		arr = load_scan(file_name)
+		(mean, blurry) = detect_blur_fft(arr, size=30,
+										 thresh=args["thresh"])
+
+		plot(arr, mean, blurry, file_id, "plots")
+
+		report.add_line(file_id, blurry)
+
+	report.finish()

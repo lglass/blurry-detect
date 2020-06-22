@@ -1,6 +1,7 @@
 import nibabel as nib
 import matplotlib.pyplot as plt
 import os
+import xlsxwriter
 
 def load_scan(file_name):
     scan = nib.load(file_name)
@@ -39,3 +40,27 @@ def plot(image, mean, blurry, nr, fig_path):
 
 
 
+class reporting():
+    """Make an excel report of blurriness"""
+    def __init__(self, file_name):
+        self.workbook = xlsxwriter.Workbook(file_name)
+        self.worksheet = self.workbook.add_worksheet()
+        # first line
+        self.worksheet.write(0, 0, "MRT-Bild")
+        self.worksheet.write(0, 3, "Blurring")
+        self.worksheet.write(0, 5, "Kein Artefakt")
+
+        self.cur_line = 1
+
+    def __next_line__(self):
+        self.cur_line += 1
+
+    def add_line(self, file_id, blurry):
+        self.worksheet.write(self.cur_line, 0, file_id)
+        if blurry:
+            self.worksheet.write(self.cur_line, 3, 1)
+        else:
+            self.worksheet.write(self.cur_line, 5, 1)
+
+    def finish(self):
+        self.workbook.close()
