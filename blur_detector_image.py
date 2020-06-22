@@ -41,9 +41,7 @@ if args["folder"]:
 		(mean, blurry) = detect_blur_fft(arr, keep_fraction=0.2,
 										 thresh=args["thresh"])
 
-		print(mean, blurry)
-		#plot(arr, mean, blurry, file_id, "plots")
-
+		plot(arr, mean, blurry, file_id, "plots")
 		report.add_line(file_id, blurry)
 
 	report.finish()
