@@ -1,52 +1,32 @@
-import matplotlib.pyplot as plt
 import numpy as np
+from scipy import fftpack
 
+def detect_blur_fft(arr: np.array, keep_fraction=0.2, thresh=2.8) -> tuple:
+    # image dimension
+    h, w = arr.shape
 
-def detect_blur_fft(image, size=60, thresh=10, vis=False):
-    # https://www.pyimagesearch.com/2020/06/15/opencv-fast-fourier-transform-fft-for-blur-detection-in-images-and-video-streams/
-    # grab the dimensions of the image and use the dimensions to
-    # derive the center (x, y)-coordinates
-    (h, w) = image.shape
-    (cX, cY) = (int(w / 2.0), int(h / 2.0))
+    # Fourier transform
+    # change from spatial to spectral domain
+    fft = fftpack.fft2(arr)
 
-    # compute the FFT to find the frequency transform, then shift
-    # the zero frequency component (i.e., DC component located at
-    # the top-left corner) to the center where it will be more
-    # easy to analyze
+    # shift spectrum before filtering in the next step
+    # this means low frequency (usually signal) is centric,
+    # high frequency (noise) is at the border
+    fft = np.fft.fftshift(fft)
 
-    fft = np.fft.fft2(image)
-    fftShift = np.fft.fftshift(fft)
+    # Set to zero coefficients we're not keeping (1-keep_fraction)
+    # This acts as a filter
+    # What we keep is high frequency components
+    fft[int(h * keep_fraction):int(h * (1 - keep_fraction)),
+        int(w * keep_fraction):int(w * (1-keep_fraction))] = 0
 
-    # check to see if we are visualizing our output
-    if vis:
-        # compute the magnitude spectrum of the transform
-        magnitude = 20 * np.log(np.abs(fftShift))
-        # display the original input image
-        (fig, ax) = plt.subplots(1, 2, )
-        ax[0].imshow(image, cmap="gray")
-        ax[0].set_title("Input")
-        ax[0].set_xticks([])
-        ax[0].set_yticks([])
-        # display the magnitude image
-        ax[1].imshow(magnitude, cmap="gray")
-        ax[1].set_title("Magnitude Spectrum")
-        ax[1].set_xticks([])
-        ax[1].set_yticks([])
-        # show our plots
-        plt.show()
+    # undo shift before reconstructing image
+    fft = np.fft.ifftshift(fft)
 
-    # zero-out the center of the FFT shift (i.e., remove low
-    # frequencies), apply the inverse shift such that the DC
-    # component once again becomes the top-left, and then apply
-    # the inverse FFT
-    fftShift[cY - size:cY + size, cX - size:cX + size] = 0
-    fftShift = np.fft.ifftshift(fftShift)
-    recon = np.fft.ifft2(fftShift)
+    # Reconstruct image
+    rec = np.fft.ifft2(fft)
 
-    # compute the magnitude spectrum of the reconstructed image,
-    # then compute the mean of the magnitude values
-    magnitude = 20 * np.log(np.abs(recon))
-    mean = np.mean(magnitude)
-    # the image will be considered "blurry" if the mean value of the
-    # magnitudes is less than the threshold value
+    # Compute mean absolute value of filtered image
+    mean = np.mean(np.abs(rec))
+
     return (mean, mean <= thresh)
