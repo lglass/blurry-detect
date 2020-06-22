@@ -17,8 +17,8 @@ ap.add_argument("-t", "--thresh", type=int, default=20,
 	help="threshold for our blur detector to fire")
 args = vars(ap.parse_args())
 
-if not os.path.exists('my_folder'):
-	os.makedirs('my_folder')
+if not os.path.exists('plots'):
+	os.makedirs('plots')
 
 # single image blurryness detection
 if args["image"]:
