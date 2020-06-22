@@ -61,6 +61,7 @@ class reporting():
             self.worksheet.write(self.cur_line, 3, 1)
         else:
             self.worksheet.write(self.cur_line, 5, 1)
+        self.__next_line__()
 
     def finish(self):
         self.workbook.close()
