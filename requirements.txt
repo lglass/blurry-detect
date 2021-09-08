@@ -5,7 +5,7 @@ nibabel==3.1.0
 numpy==1.18.5
 opencv-python==4.2.0.34
 packaging==20.4
-Pillow==8.1.1
+Pillow==8.3.2
 pkg-resources==0.0.0
 pyparsing==2.4.7
 python-dateutil==2.8.1
