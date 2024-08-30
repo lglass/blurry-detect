@@ -3,7 +3,7 @@ kiwisolver==1.2.0
 matplotlib==3.2.1
 nibabel==3.1.0
 numpy==1.22.0
-opencv-python==4.2.0.34
+opencv-python==4.8.1.78
 packaging==20.4
 Pillow>=8.3.2
 pkg-resources==0.0.0
